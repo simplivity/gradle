@@ -56,6 +56,7 @@ public class IncrementalCompileProcessor {
     }
 
     private class IncrementalCompileFiles {
+        private static final String STRICT_INCLUDE_MODE_PROPERTY = "org.gradle.unknown.include.strict";
 
         private final List<File> recompile = new ArrayList<File>();
 
@@ -108,8 +109,11 @@ public class IncrementalCompileProcessor {
 
             for (ResolvedInclude dep : newState.getResolvedIncludes()) {
                 if (dep.isUnknown()) {
-                    LOGGER.info(String.format("Cannot determine changed state of included '%s' in source file '%s'. Assuming changed.", dep.getInclude(), file.getName()));
-                    changed = true;
+                    boolean assumeChanged = Boolean.getBoolean(STRICT_INCLUDE_MODE_PROPERTY);
+                    LOGGER.info(String.format("Cannot determine changed state of included '%s' in source file '%s'. %s.", dep.getInclude(), file.getName(), assumeChanged ? "Assuming changed" : "Ignored"));
+                    if (assumeChanged) {
+                        changed = true;
+                    }
                 } else {
                     ((IncrementalTaskInputsInternal)taskInputs).newInput(dep.getFile());
 
