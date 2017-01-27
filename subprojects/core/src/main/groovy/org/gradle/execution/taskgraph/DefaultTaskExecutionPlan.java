@@ -57,6 +57,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class DefaultTaskExecutionPlan implements TaskExecutionPlan {
 
     public static final String INTRA_PROJECT_TOGGLE = "org.gradle.parallel.intra";
+    public static final String INTRA_BUILD_TOGGLE = "org.gradle.parallel.build.scope";
 
     private final static Logger LOGGER = Logging.getLogger(DefaultTaskExecutionPlan.class);
 
@@ -80,18 +81,23 @@ public class DefaultTaskExecutionPlan implements TaskExecutionPlan {
     private boolean tasksCancelled;
 
     private final boolean intraProjectParallelization;
+    private final boolean buildScopeParallelization;
 
-    public DefaultTaskExecutionPlan(BuildCancellationToken cancellationToken, boolean intraProjectParallelization) {
+    public DefaultTaskExecutionPlan(BuildCancellationToken cancellationToken, boolean intraProjectParallelization, boolean buildScopeParallelization) {
         this.cancellationToken = cancellationToken;
         this.intraProjectParallelization = intraProjectParallelization;
+        this.buildScopeParallelization = buildScopeParallelization;
 
         if (intraProjectParallelization) {
             LOGGER.info("intra project task parallelization is enabled");
         }
+        if (buildScopeParallelization) {
+            LOGGER.info("build scope task parallelization is enabled");
+        }
     }
 
     public DefaultTaskExecutionPlan(BuildCancellationToken cancellationToken) {
-        this(cancellationToken, Boolean.getBoolean(INTRA_PROJECT_TOGGLE));
+        this(cancellationToken, Boolean.getBoolean(INTRA_PROJECT_TOGGLE), Boolean.getBoolean(INTRA_BUILD_TOGGLE));
     }
 
     public void addToTaskGraph(Collection<? extends Task> tasks) {
@@ -506,7 +512,11 @@ public class DefaultTaskExecutionPlan implements TaskExecutionPlan {
                 return false;
             }
         } else {
-            if (projectsWithRunningTasks.contains(projectPath)) {
+            if (buildScopeParallelization) {
+                if (projectsWithRunningTasks.isEmpty() == false) {
+                    return false;
+                }
+            } else if (projectsWithRunningTasks.contains(projectPath)) {
                 return false;
             }
         }

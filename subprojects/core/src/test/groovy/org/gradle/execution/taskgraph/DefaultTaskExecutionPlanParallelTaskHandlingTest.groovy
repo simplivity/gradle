@@ -44,7 +44,7 @@ class DefaultTaskExecutionPlanParallelTaskHandlingTest extends Specification {
     TestNameTestDirectoryProvider tmp = new TestNameTestDirectoryProvider()
     FileSystem fs = NativeServicesTestFixture.instance.get(FileSystem)
 
-    DefaultTaskExecutionPlan executionPlan = new DefaultTaskExecutionPlan(Stub(BuildCancellationToken), true)
+    DefaultTaskExecutionPlan executionPlan = new DefaultTaskExecutionPlan(Stub(BuildCancellationToken), true, false)
     DefaultProject root = createRootProject()
 
     List<TaskInfo> startedTasks = []
@@ -103,7 +103,7 @@ class DefaultTaskExecutionPlanParallelTaskHandlingTest extends Specification {
 
     def "tasks arent parallelized unless toggle is on"() {
         given:
-        executionPlan = new DefaultTaskExecutionPlan(Stub(BuildCancellationToken), false)
+        executionPlan = new DefaultTaskExecutionPlan(Stub(BuildCancellationToken), false, false)
         Task a = root.task("a")
         Task b = root.task("b")
 
